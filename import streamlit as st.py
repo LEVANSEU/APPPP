@@ -63,13 +63,18 @@ st.markdown("""
             font-weight: bold;
             color: #222;
         }
-        /* Ensure table text is visible on white background */
+        /* Ensure table text is visible and numbers aligned right on white background */
         .stTable {
             color: #222 !important;
         }
         .stTable td, .stTable th {
             color: #222 !important;
             background-color: white !important;
+        }
+        .stTable td:nth-child(n+3), .stTable th:nth-child(n+3) { /* Apply to numeric columns (3rd and beyond) */
+            text-align: right !important;
+            font-variant-numeric: tabular-nums;
+            padding-right: 1rem;
         }
         /* Ensure write output and other elements are visible */
         .stMarkdown, .stWrite {
