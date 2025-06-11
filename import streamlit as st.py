@@ -199,17 +199,20 @@ if report_file and statement_files:
                 st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
                 missing_data = []
                 for company_id in missing_company_ids:
+                    # Try to get company name from purchases_df, use "-" if not found
+                    company_name = purchases_df[purchases_df['საიდენტიფიკაციო კოდი'] == company_id]['დასახელება'].iloc[0] if company_id in invoice_company_ids else "-"
                     total_amount = bank_df[bank_df['P'] == str(company_id)]['Amount'].sum()
                     invoice_amount = 0.00  # Since they are not in invoice list
                     difference = total_amount - invoice_amount
-                    missing_data.append([company_id, total_amount, invoice_amount, difference])
+                    missing_data.append([company_name, company_id, total_amount, invoice_amount, difference])
                 
                 # Display as a table
                 st.table({
-                    "საიდენტიფიკაციო კოდი": [item[0] for item in missing_data],
-                    "ჩარიცხული თანხა": [f"{item[1]:,.2f}" for item in missing_data],
-                    "ანგარიშფაქტურის თანხა": [f"{item[2]:,.2f}" for item in missing_data],
-                    "სხვაობა": [f"{item[3]:,.2f}" for item in missing_data]
+                    "დასახელება": [item[0] for item in missing_data],
+                    "საიდენტიფიკაციო კოდი": [item[1] for item in missing_data],
+                    "ჩარიცხული თანხა": [f"{item[2]:,.2f}" for item in missing_data],
+                    "ანგარიშფაქტურის თანხა": [f"{item[3]:,.2f}" for item in missing_data],
+                    "სხვაობა": [f"{item[4]:,.2f}" for item in missing_data]
                 })
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
