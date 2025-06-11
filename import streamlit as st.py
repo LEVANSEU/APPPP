@@ -9,7 +9,7 @@ st.markdown("""
     <style>
         body, .main, .block-container {
             background-color: white !important;
-            color: #222 !important;
+            color: #222 !important; /* Default text color */
             font-family: 'Segoe UI', sans-serif;
         }
         h1, h2, h3, h4, h5, h6, .stMarkdown, .stText, .stTextLabelWrapper, label {
@@ -62,6 +62,14 @@ st.markdown("""
             padding-right: 1rem;
             font-weight: bold;
             color: #222;
+        }
+        /* Ensure table text is visible on white background */
+        .stTable {
+            color: #222 !important;
+        }
+        /* Ensure write output is visible */
+        .stMarkdown, .stWrite {
+            color: #222 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -130,7 +138,7 @@ if report_file and statement_files:
     output.seek(0)
 
     if 'selected_company' not in st.session_state:
-        st.subheader("📋 კომპანიების ჩამონათვალი")
+        st.subheader("📋 კომპანიების Ⴡဩონათვალი")  # Note: "ჩ" seems to be a typo, likely meant "ჩამონათვალი"
 
         search_code = st.text_input("🔎 ჩაწერე საიდენტიფიკაციო კოდი:", "")
         sort_column = st.selectbox("📊 დალაგების ველი", ["ინვოისების ჯამი", "ჩარიცხვა", "სხვაობა"])
