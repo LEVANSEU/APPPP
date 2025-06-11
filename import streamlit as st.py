@@ -169,10 +169,28 @@ if report_file and statement_files:
             with col5:
                 st.markdown(f"<div class='number-cell'>{difference:,.2f}</div>", unsafe_allow_html=True)
 
-        # New button placed outside columns, below the table
-        st.write("---")  # Separator line
+        # New button with logic for companies not in invoice list
         if st.button("დამატებითი მოქმედება"):
-            st.success("ღილაკი დაიჭირა!")
+            # Get unique company IDs from bank_df
+            bank_company_ids = bank_df['P'].unique()
+            # Get company IDs from purchases_df
+            invoice_company_ids = purchases_df['საიდენტიფიკაციო კოდი'].unique()
+            # Find companies in bank_df but not in purchases_df
+            missing_company_ids = [cid for cid in bank_company_ids if cid not in invoice_company_ids]
+            
+            if missing_company_ids:
+                st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
+                missing_summaries = []
+                for company_id in missing_company_ids:
+                    total_amount = bank_df[bank_df['P'] == str(company_id)]['Amount'].sum()
+                    missing_summaries.append((company_id, total_amount))
+                
+                # Sort and display
+                missing_summaries.sort(key=lambda x: x[1], reverse=True)
+                for company_id, total_amount in missing_summaries:
+                    st.write(f"საიდენტიფიკაციო კოდი: {company_id}, ჩარიცხული თანხა: {total_amount:,.2f}")
+            else:
+                st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
     else:
         selected_code = st.session_state['selected_company']
