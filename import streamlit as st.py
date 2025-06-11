@@ -187,9 +187,17 @@ if report_file and statement_files:
             with col5:
                 st.markdown(f"<div class='number-cell'>{difference:,.2f}</div>", unsafe_allow_html=True)
 
+        # Sorting and filtering options
+        if 'sort_order_missing' not in st.session_state:
+            st.session_state['sort_order_missing'] = "კლებადობით"
+        if 'search_query_missing' not in st.session_state:
+            st.session_state['search_query_missing'] = ""
+
+        sort_order_missing = st.radio("სორტირება:", ["ზრდადობით", "კლებადობით"], key="sort_order_missing")
+        search_query_missing = st.text_input("ძებნა (კოდი ან დასახელება):", key="search_query_missing")
+
         # New button with logic for companies not in invoice list
         if st.button("დამატებითი მოქმედება"):
-            st.write("Sorting and filtering options activated.")
             # Get unique company IDs from bank_df
             bank_company_ids = bank_df['P'].unique()
             # Get company IDs from purchases_df
@@ -209,10 +217,6 @@ if report_file and statement_files:
                     difference = total_amount - invoice_amount
                     missing_data.append([company_name, company_id, total_amount, invoice_amount, difference])
                 
-                # Sort and filter options (inside button action)
-                sort_order_missing = st.radio("სორტირება:", ["ზრდადობით", "კლებადობით"])
-                search_query_missing = st.text_input("ძებნა (კოდი ან დასახელება):")
-                
                 # Apply search filter
                 if search_query_missing.strip():
                     missing_data = [item for item in missing_data if 
@@ -220,7 +224,7 @@ if report_file and statement_files:
                                   str(item[0]).lower().find(search_query_missing.lower().strip()) != -1]
                 
                 # Apply sort
-                sort_reverse = sort_order_missing == "კლებადობით"
+                sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
                 # Display as a table
