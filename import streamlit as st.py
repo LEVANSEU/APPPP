@@ -140,6 +140,8 @@ if report_file and statement_files:
             st.error(f"Error processing company {company_id}: {str(e)}")
             continue
 
+    st.write("company_summaries length:", len(company_summaries))  # Diagnostic for summaries
+
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
