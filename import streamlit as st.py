@@ -180,15 +180,20 @@ if report_file and statement_files:
             
             if missing_company_ids:
                 st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
-                missing_summaries = []
+                missing_data = []
                 for company_id in missing_company_ids:
                     total_amount = bank_df[bank_df['P'] == str(company_id)]['Amount'].sum()
-                    missing_summaries.append((company_id, total_amount))
+                    invoice_amount = 0.00  # Since they are not in invoice list
+                    difference = total_amount - invoice_amount
+                    missing_data.append([company_id, total_amount, invoice_amount, difference])
                 
-                # Sort and display
-                missing_summaries.sort(key=lambda x: x[1], reverse=True)
-                for company_id, total_amount in missing_summaries:
-                    st.write(f"საიდენტიფიკაციო კოდი: {company_id}, ჩარიცხული თანხა: {total_amount:,.2f}")
+                # Display as a table
+                st.table({
+                    "საიდენტიფიკაციო კოდი": [item[0] for item in missing_data],
+                    "ჩარიცხული თანხა": [f"{item[1]:,.2f}" for item in missing_data],
+                    "ანგარიშფაქტურის თანხა": [f"{item[2]:,.2f}" for item in missing_data],
+                    "სხვაობა": [f"{item[3]:,.2f}" for item in missing_data]
+                })
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
