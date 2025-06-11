@@ -232,30 +232,29 @@ if report_file and statement_files:
                 sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
-                # Display as a table with buttons
+                # Display as a table with headers
+                st.markdown("""
+                <div class='summary-header'>
+                    <div style='flex: 2;'>დასახელება</div>
+                    <div style='flex: 2;'>საიდენტიფიკაციო კოდი</div>
+                    <div style='flex: 1.5;'>ჩარიცხული თანხა</div>
+                    <div style='flex: 1.5;'>ანგარიშფაქტურის თანხა</div>
+                    <div style='flex: 1.5;'>სხვაობა</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 for item in missing_data:
                     col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 1.5])
                     with col1:
                         st.write(item[0])
                     with col2:
-                        if st.button(str(item[1]), key=f"missing_{item[1]}"):
-                            st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
-                            st.experimental_rerun()  # Rerun to show details
+                        st.write(item[1])  # Display as text for now, button will be added later
                     with col3:
                         st.write(f"{item[2]:,.2f}")
                     with col4:
                         st.write(f"{item[3]:,.2f}")
                     with col5:
                         st.write(f"{item[4]:,.2f}")
-
-                # Detail view for selected missing company (placeholder for now)
-                if 'selected_missing_company' in st.session_state:
-                    selected_id = st.session_state['selected_missing_company']
-                    st.subheader(f"დეტალები - {selected_id}")
-                    st.write("გთხოვთ, მითხრათ, რა უნდა გამოჩნდეს ამ გვერდზე!")
-                    if st.button("⬅️ დაბრუნება"):
-                        del st.session_state['selected_missing_company']
-                        st.experimental_rerun()
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
