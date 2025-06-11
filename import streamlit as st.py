@@ -86,6 +86,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state for view management
+if 'view' not in st.session_state:
+    st.session_state['view'] = 'main'
+
 st.title("Excel გენერატორი")
 
 report_file = st.file_uploader("ატვირთე ანგარიშფაქტურების ფაილი (report.xlsx)", type=["xlsx"])
@@ -152,7 +156,8 @@ if report_file and statement_files:
     wb.save(output)
     output.seek(0)
 
-    if 'selected_company' not in st.session_state:
+    # Main view
+    if st.session_state['view'] == 'main':
         st.subheader("📋 კომპანიების ყჩამონათვალი")  # Note: "ჩ" seems to be a typo, likely meant "ჩამონათვალი"
 
         search_code = st.text_input("🔎 ჩაწერე საიდენტიფიკაციო კოდი:", "")
@@ -192,7 +197,7 @@ if report_file and statement_files:
             with col5:
                 st.markdown(f"<div class='number-cell'>{difference:,.2f}</div>", unsafe_allow_html=True)
 
-        # Sorting and filtering options
+        # Sorting and filtering options for missing companies
         if 'sort_order_missing' not in st.session_state:
             st.session_state['sort_order_missing'] = "კლებადობით"
         if 'search_query_missing' not in st.session_state:
@@ -201,77 +206,88 @@ if report_file and statement_files:
         sort_order_missing = st.radio("სორტირება:", ["ზრდადობით", "კლებადობით"], key="sort_order_missing")
         search_query_missing = st.text_input("ძებნა (კოდი ან დასახელება):", key="search_query_missing")
 
-        # New button with logic for companies not in invoice list
         if st.button("დამატებითი მოქმედება"):
-            # Get unique company IDs from bank_df
-            bank_company_ids = bank_df['P'].unique()
-            # Get company IDs from purchases_df
-            invoice_company_ids = purchases_df['საიდენტიფიკაციო კოდი'].unique()
-            # Find companies in bank_df but not in purchases_df
-            missing_company_ids = [cid for cid in bank_company_ids if cid not in invoice_company_ids]
-            
-            if missing_company_ids:
-                st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
-                missing_data = []
-                for company_id in missing_company_ids:
-                    # Get company name from bank_df where P matches
-                    matching_rows = bank_df[bank_df['P'] == str(company_id)]
-                    company_name = matching_rows['Name'].iloc[0] if not matching_rows.empty else "-"
-                    total_amount = bank_df[bank_df['P'] == str(company_id)]['Amount'].sum()
-                    invoice_amount = 0.00  # Since they are not in invoice list
-                    difference = total_amount - invoice_amount
-                    missing_data.append([company_name, company_id, total_amount, invoice_amount, difference])
-                
-                # Apply search filter
-                if search_query_missing.strip():
-                    missing_data = [item for item in missing_data if 
-                                  str(item[1]) == search_query_missing.strip() or 
-                                  str(item[0]).lower().find(search_query_missing.lower().strip()) != -1]
-                
-                # Apply sort
-                sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
-                missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
-                
-                # Display as a table with headers
-                st.markdown("""
-                <div class='summary-header'>
-                    <div style='flex: 2;'>დასახელება</div>
-                    <div style='flex: 2;'>საიდენტიფიკაციო კოდი</div>
-                    <div style='flex: 1.5;'>ჩარიცხული თანხა</div>
-                    <div style='flex: 1.5;'>ანგარიშფაქტურის თანხა</div>
-                    <div style='flex: 1.5;'>სხვაობა</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                for item in missing_data:
-                    col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 1.5])
-                    with col1:
-                        st.write(item[0])
-                    with col2:
-                        if st.button(str(item[1]), key=f"missing_{item[1]}"):
-                            st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
-                            st.experimental_rerun()  # Rerun to show details
-                    with col3:
-                        st.write(f"{item[2]:,.2f}")
-                    with col4:
-                        st.write(f"{item[3]:,.2f}")
-                    with col5:
-                        st.write(f"{item[4]:,.2f}")
+            st.session_state['view'] = 'missing_companies'  # Switch to missing companies view
+            st.experimental_rerun()
 
-                # Detail view for selected missing company
-                if 'selected_missing_company' in st.session_state:
-                    selected_id = st.session_state['selected_missing_company']
-                    st.subheader(f"ჩარიცხვების ცხრილი - {selected_id}")
-                    matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
-                    if not matching_transactions.empty:
-                        st.table(matching_transactions[['Name', 'P', 'Amount']])  # Display transactions table
-                    else:
-                        st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
-                    if st.button("⬅️ დაბრუნება"):
-                        del st.session_state['selected_missing_company']
-                        st.experimental_rerun()
-            else:
-                st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
+    # Missing companies view
+    elif st.session_state['view'] == 'missing_companies':
+        st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
+
+        # Get unique company IDs from bank_df
+        bank_company_ids = bank_df['P'].unique()
+        # Get company IDs from purchases_df
+        invoice_company_ids = purchases_df['საიდენტიფიკაციო კოდი'].unique()
+        # Find companies in bank_df but not in purchases_df
+        missing_company_ids = [cid for cid in bank_company_ids if cid not in invoice_company_ids]
+        
+        if missing_company_ids:
+            missing_data = []
+            for company_id in missing_company_ids:
+                # Get company name from bank_df where P matches
+                matching_rows = bank_df[bank_df['P'] == str(company_id)]
+                company_name = matching_rows['Name'].iloc[0] if not matching_rows.empty else "-"
+                total_amount = bank_df[bank_df['P'] == str(company_id)]['Amount'].sum()
+                invoice_amount = 0.00  # Since they are not in invoice list
+                difference = total_amount - invoice_amount
+                missing_data.append([company_name, company_id, total_amount, invoice_amount, difference])
+            
+            # Apply search filter
+            if search_query_missing.strip():
+                missing_data = [item for item in missing_data if 
+                              str(item[1]) == search_query_missing.strip() or 
+                              str(item[0]).lower().find(search_query_missing.lower().strip()) != -1]
+            
+            # Apply sort
+            sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
+            missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
+            
+            # Display as a table with headers
+            st.markdown("""
+            <div class='summary-header'>
+                <div style='flex: 2;'>დასახელება</div>
+                <div style='flex: 2;'>საიდენტიფიკაციო კოდი</div>
+                <div style='flex: 1.5;'>ჩარიცხული თანხა</div>
+                <div style='flex: 1.5;'>ანგარიშფაქტურის თანხა</div>
+                <div style='flex: 1.5;'>სხვაობა</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            for item in missing_data:
+                col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 1.5])
+                with col1:
+                    st.write(item[0])
+                with col2:
+                    if st.button(str(item[1]), key=f"missing_{item[1]}"):
+                        st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
+                        st.experimental_rerun()  # Rerun to show details
+                with col3:
+                    st.write(f"{item[2]:,.2f}")
+                with col4:
+                    st.write(f"{item[3]:,.2f}")
+                with col5:
+                    st.write(f"{item[4]:,.2f}")
+
+            # Back button
+            if st.button("⬅️ დაბრუნება"):
+                st.session_state['view'] = 'main'  # Return to main view
+                st.experimental_rerun()
+        else:
+            st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
+
+    # Detail view for selected missing company
+    elif 'selected_missing_company' in st.session_state:
+        selected_id = st.session_state['selected_missing_company']
+        st.subheader(f"ჩარიცხვების ცხრილი - {selected_id}")
+        matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
+        if not matching_transactions.empty:
+            st.table(matching_transactions[['Name', 'P', 'Amount']])  # Display transactions table
+        else:
+            st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
+        if st.button("⬅️ დაბრუნება"):
+            del st.session_state['selected_missing_company']
+            st.session_state['view'] = 'missing_companies'  # Return to missing companies view
+            st.experimental_rerun()
 
     else:
         selected_code = st.session_state['selected_company']
@@ -308,7 +324,7 @@ if report_file and statement_files:
             company_output.seek(0)
 
             st.download_button(
-                label=f"⬇️ Ⴡဩონათვირთე {company_name} ინვოისების Excel",
+                label=f"⬇️ ჩაღონათვირთე {company_name} ინვოისების Excel",
                 data=company_output,
                 file_name=f"{company_name}_ინვოისები.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
