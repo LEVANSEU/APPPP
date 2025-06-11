@@ -153,7 +153,7 @@ if report_file and statement_files:
     output.seek(0)
 
     if 'selected_company' not in st.session_state:
-        st.subheader("📋 კომპანიების Ⴡဩონათვალი")  # Note: "ჩ" seems to be a typo, likely meant "ჩამონათვალი"
+        st.subheader("📋 კომპანიების ყჩამონათვალი")  # Note: "ჩ" seems to be a typo, likely meant "ჩამონათვალი"
 
         search_code = st.text_input("🔎 ჩაწერე საიდენტიფიკაციო კოდი:", "")
         sort_column = st.selectbox("📊 დალაგების ველი", ["ინვოისების ჯამი", "ჩარიცხვა", "სხვაობა"])
@@ -232,7 +232,7 @@ if report_file and statement_files:
                 sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
-                # Display as a table with headers
+                # Display as a table with headers and buttons
                 st.markdown("""
                 <div class='summary-header'>
                     <div style='flex: 2;'>დასახელება</div>
