@@ -232,7 +232,7 @@ if report_file and statement_files:
                 sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
-                # Display as a table with headers and buttons
+                # Display as a table with headers
                 st.markdown("""
                 <div class='summary-header'>
                     <div style='flex: 2;'>დასახელება</div>
@@ -250,7 +250,7 @@ if report_file and statement_files:
                     with col2:
                         if st.button(str(item[1]), key=f"missing_{item[1]}"):
                             st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
-                            st.experimental_rerun()  # Rerun to potentially show details
+                            st.experimental_rerun()  # Rerun to show details
                     with col3:
                         st.write(f"{item[2]:,.2f}")
                     with col4:
@@ -258,11 +258,15 @@ if report_file and statement_files:
                     with col5:
                         st.write(f"{item[4]:,.2f}")
 
-                # Detail view for selected missing company (placeholder for now)
+                # Detail view for selected missing company
                 if 'selected_missing_company' in st.session_state:
                     selected_id = st.session_state['selected_missing_company']
-                    st.subheader(f"დეტალები - {selected_id}")
-                    st.write("გთხოვთ, მითხრათ, რა უნდა გამოჩნდეს ამ გვერდზე!")
+                    st.subheader(f"ჩარიცხვების ცხრილი - {selected_id}")
+                    matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
+                    if not matching_transactions.empty:
+                        st.table(matching_transactions[['Name', 'P', 'Amount']])  # Display transactions table
+                    else:
+                        st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
                     if st.button("⬅️ დაბრუნება"):
                         del st.session_state['selected_missing_company']
                         st.experimental_rerun()
