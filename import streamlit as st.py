@@ -188,6 +188,14 @@ if report_file and statement_files:
                 st.markdown(f"<div class='number-cell'>{difference:,.2f}</div>", unsafe_allow_html=True)
 
         # New button with logic for companies not in invoice list
+        if 'sort_order_missing' not in st.session_state:
+            st.session_state['sort_order_missing'] = "კლებადობით"
+        if 'search_query_missing' not in st.session_state:
+            st.session_state['search_query_missing'] = ""
+
+        sort_order_missing = st.radio("სორტირება:", ["ზრდადობით", "კლებადობით"], key="sort_order_missing")
+        search_query_missing = st.text_input("ძებნა (კოდი ან დასახელება):", key="search_query_missing")
+
         if st.button("დამატებითი მოქმედება"):
             # Get unique company IDs from bank_df
             bank_company_ids = bank_df['P'].unique()
@@ -207,6 +215,16 @@ if report_file and statement_files:
                     invoice_amount = 0.00  # Since they are not in invoice list
                     difference = total_amount - invoice_amount
                     missing_data.append([company_name, company_id, total_amount, invoice_amount, difference])
+                
+                # Apply search filter
+                if search_query_missing.strip():
+                    missing_data = [item for item in missing_data if 
+                                  str(item[1]) == search_query_missing.strip() or 
+                                  str(item[0]).lower().find(search_query_missing.lower().strip()) != -1]
+                
+                # Apply sort
+                sort_reverse = sort_order_missing == "კლებადობით"
+                missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
                 # Display as a table
                 st.table({
