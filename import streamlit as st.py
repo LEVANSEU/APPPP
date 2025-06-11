@@ -207,19 +207,24 @@ if report_file and statement_files:
         search_query_missing = st.text_input("ძებნა (კოდი ან დასახელება):", key="search_query_missing")
 
         if st.button("დამატებითი მოქმედება"):
+            st.write(f"Switching to missing companies view. Current view: {st.session_state['view']}")
             st.session_state['view'] = 'missing_companies'  # Switch to missing companies view
             st.experimental_rerun()
 
     # Missing companies view
     elif st.session_state['view'] == 'missing_companies':
+        st.write(f"Current view: {st.session_state['view']}")  # Debug view
         st.subheader("კომპანიები ანგარიშფაქტურის სიაში არ არიან")
 
         # Get unique company IDs from bank_df
         bank_company_ids = bank_df['P'].unique()
+        st.write(f"bank_company_ids: {bank_company_ids}")  # Debug
         # Get company IDs from purchases_df
         invoice_company_ids = purchases_df['საიდენტიფიკაციო კოდი'].unique()
+        st.write(f"invoice_company_ids: {invoice_company_ids}")  # Debug
         # Find companies in bank_df but not in purchases_df
         missing_company_ids = [cid for cid in bank_company_ids if cid not in invoice_company_ids]
+        st.write(f"missing_company_ids: {missing_company_ids}")  # Debug
         
         if missing_company_ids:
             missing_data = []
