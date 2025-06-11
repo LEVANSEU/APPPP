@@ -248,13 +248,24 @@ if report_file and statement_files:
                     with col1:
                         st.write(item[0])
                     with col2:
-                        st.write(item[1])  # Display as text for now, button will be added later
+                        if st.button(str(item[1]), key=f"missing_{item[1]}"):
+                            st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
+                            st.experimental_rerun()  # Rerun to potentially show details
                     with col3:
                         st.write(f"{item[2]:,.2f}")
                     with col4:
                         st.write(f"{item[3]:,.2f}")
                     with col5:
                         st.write(f"{item[4]:,.2f}")
+
+                # Detail view for selected missing company (placeholder for now)
+                if 'selected_missing_company' in st.session_state:
+                    selected_id = st.session_state['selected_missing_company']
+                    st.subheader(f"დეტალები - {selected_id}")
+                    st.write("გთხოვთ, მითხრათ, რა უნდა გამოჩნდეს ამ გვერდზე!")
+                    if st.button("⬅️ დაბრუნება"):
+                        del st.session_state['selected_missing_company']
+                        st.experimental_rerun()
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
