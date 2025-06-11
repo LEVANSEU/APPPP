@@ -67,8 +67,15 @@ st.markdown("""
         .stTable {
             color: #222 !important;
         }
-        /* Ensure write output is visible */
+        .stTable td, .stTable th {
+            color: #222 !important;
+            background-color: white !important;
+        }
+        /* Ensure write output and other elements are visible */
         .stMarkdown, .stWrite {
+            color: #222 !important;
+        }
+        .dataFrame {
             color: #222 !important;
         }
     </style>
