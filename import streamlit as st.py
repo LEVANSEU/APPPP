@@ -232,14 +232,33 @@ if report_file and statement_files:
                 sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
-                # Display as a table
-                st.table({
-                    "დასახელება": [item[0] for item in missing_data],
-                    "საიდენტიფიკაციო კოდი": [item[1] for item in missing_data],
-                    "ჩარიცხული თანხა": [f"{item[2]:,.2f}" for item in missing_data],
-                    "ანგარიშფაქტურის თანხა": [f"{item[3]:,.2f}" for item in missing_data],
-                    "სხვაობა": [f"{item[4]:,.2f}" for item in missing_data]
-                })
+                # Display as a table with buttons
+                table_data = {
+                    "დასახელება": [],
+                    "საიდენტიფიკაციო კოდი": [],
+                    "ჩარიცხული თანხა": [],
+                    "ანგარიშფაქტურის თანხა": [],
+                    "სხვაობა": []
+                }
+                for item in missing_data:
+                    table_data["დასახელება"].append(item[0])
+                    table_data["საიდენტიფიკაციო კოდი"].append(st.button(str(item[1]), key=f"missing_{item[1]}", on_click=lambda x=item[1]: st.session_state.update({'selected_missing_company': x})))
+                    table_data["ჩარიცხული თანხა"].append(f"{item[2]:,.2f}")
+                    table_data["ანგარიშფაქტურის თანხა"].append(f"{item[3]:,.2f}")
+                    table_data["სხვაობა"].append(f"{item[4]:,.2f}")
+                st.table(table_data)
+
+                # Detail view for selected missing company
+                if 'selected_missing_company' in st.session_state:
+                    selected_id = st.session_state['selected_missing_company']
+                    st.subheader(f"გადარიცხვების ცხრილი - {selected_id}")
+                    matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
+                    if not matching_transactions.empty:
+                        st.table(matching_transactions[['Name', 'P', 'Amount']])  # Display relevant columns
+                    else:
+                        st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
+                    if st.button("⬅️ დაბრუნება"):
+                        del st.session_state['selected_missing_company']
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
