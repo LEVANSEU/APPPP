@@ -232,14 +232,30 @@ if report_file and statement_files:
                 sort_reverse = st.session_state['sort_order_missing'] == "კლებადობით"
                 missing_data.sort(key=lambda x: x[2], reverse=sort_reverse)  # Sort by total amount
                 
-                # Display as a table
-                st.table({
-                    "დასახელება": [item[0] for item in missing_data],
-                    "საიდენტიფიკაციო კოდი": [item[1] for item in missing_data],
-                    "ჩარიცხული თანხა": [f"{item[2]:,.2f}" for item in missing_data],
-                    "ანგარიშფაქტურის თანხა": [f"{item[3]:,.2f}" for item in missing_data],
-                    "სხვაობა": [f"{item[4]:,.2f}" for item in missing_data]
-                })
+                # Display as a table with buttons
+                for item in missing_data:
+                    col1, col2, col3, col4, col5 = st.columns([2, 2, 1.5, 1.5, 1.5])
+                    with col1:
+                        st.write(item[0])
+                    with col2:
+                        if st.button(str(item[1]), key=f"missing_{item[1]}"):
+                            st.session_state['selected_missing_company'] = item[1]  # Save selected company ID
+                            st.experimental_rerun()  # Rerun to show details
+                    with col3:
+                        st.write(f"{item[2]:,.2f}")
+                    with col4:
+                        st.write(f"{item[3]:,.2f}")
+                    with col5:
+                        st.write(f"{item[4]:,.2f}")
+
+                # Detail view for selected missing company (placeholder for now)
+                if 'selected_missing_company' in st.session_state:
+                    selected_id = st.session_state['selected_missing_company']
+                    st.subheader(f"დეტალები - {selected_id}")
+                    st.write("გთხოვთ, მითხრათ, რა უნდა გამოჩნდეს ამ გვერდზე!")
+                    if st.button("⬅️ დაბრუნება"):
+                        del st.session_state['selected_missing_company']
+                        st.experimental_rerun()
             else:
                 st.info("ყველა კომპანია ანგარიშფაქტურის სიაში გამოჩნდა.")
 
@@ -278,7 +294,7 @@ if report_file and statement_files:
             company_output.seek(0)
 
             st.download_button(
-                label=f"⬇️ ჩამოტვირთე {company_name} ინვოისების Excel",
+                label=f"⬇️ Ⴡဩონათვირთე {company_name} ინვოისების Excel",
                 data=company_output,
                 file_name=f"{company_name}_ინვოისები.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
