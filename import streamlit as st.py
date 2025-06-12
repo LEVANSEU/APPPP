@@ -307,15 +307,30 @@ if report_file and statement_files:
         if st.button("⬅️ დაბრუნება სრულ სიაზე"):
             del st.session_state['selected_company']
 
-    # Detail view for selected missing company
-    if 'selected_missing_company' in st.session_state:
-        selected_id = st.session_state['selected_missing_company']
-        st.subheader(f"ჩარიცხვების ცხრილი - {selected_id}")
-        matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
-        if not matching_transactions.empty:
-            st.table(matching_transactions[['Name', 'P', 'Amount']])  # Display transactions table
-        else:
-            st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
-        if st.button("⬅️ დაბრუნება სრულ სიაზე"):
-            del st.session_state['selected_missing_company']
-            st.experimental_rerun()
+    # Set current page
+if 'page' not in st.session_state:
+    st.session_state['page'] = 'main'
+
+# If user clicked on missing company
+if 'selected_missing_company' in st.session_state:
+    st.session_state['page'] = 'missing_company'
+
+# Main page view
+if st.session_state['page'] == 'main':
+    # ყველა ის ნაწილი რაც მთავარ გვერდზეა — როგორც უკვე გაქვს, მათ შორის კომპანიაების სია, ღილაკები და ფილტრები
+    # (არაფერი არ უნდა შეცვალო ამ ნაწილში)
+
+# Missing company detail page
+elif st.session_state['page'] == 'missing_company':
+    selected_id = st.session_state['selected_missing_company']
+    st.subheader(f"💵 ჩარიცხვების ცხრილი - {selected_id}")
+    matching_transactions = bank_df[bank_df['P'] == str(selected_id)]
+    if not matching_transactions.empty:
+        st.dataframe(matching_transactions[['Name', 'P', 'Amount']], use_container_width=True)
+    else:
+        st.warning("ჩანაწერი არ მოიძებნა ამ კომპანიისთვის.")
+
+    if st.button("⬅️ დაბრუნება სრულ სიაზე"):
+        del st.session_state['selected_missing_company']
+        st.session_state['page'] = 'main'
+        st.experimental_rerun()
